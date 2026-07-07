@@ -1,4 +1,4 @@
 flask==3.0.3
-pandas>=2.2
-numpy>=2.0,<3
-scikit-learn>=1.4
+pandas==3.0.2
+numpy==2.4.4
+scikit-learn==1.8.0
