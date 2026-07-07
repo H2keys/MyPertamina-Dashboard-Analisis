@@ -1,312 +1,296 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Sentimen MyPertamina</title>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap"
-        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/wordcloud2.js/1.2.2/wordcloud2.min.js"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-
 <body>
 
-    <!-- TOP NAV -->
-    <nav class="topnav">
-        <div class="topnav-brand">
-            <div class="logo-dot"><i class="bi bi-droplet-half"></i></div>
-            <span>MyPertamina · Analisis Sentimen</span>
-        </div>
-        <div style="display:flex; align-items:center; gap:16px;">
-            <span class="badge-live">SVM + TF-IDF</span>
-            <span class="topnav-meta" id="navDate"></span>
-        </div>
-    </nav>
+<!-- TOP NAV -->
+<nav class="topnav">
+    <div class="topnav-brand">
+        <div class="logo-dot"><i class="bi bi-droplet-half"></i></div>
+        <span>MyPertamina Â· Analisis Sentimen</span>
+    </div>
+    <div style="display:flex; align-items:center; gap:16px;">
+        <span class="badge-live">SVM + TF-IDF</span>
+        <span class="topnav-meta" id="navDate"></span>
+    </div>
+</nav>
 
-    <div class="main">
+<div class="main">
 
-        <!-- STAT CARDS -->
-        <div class="section-label">Ringkasan Dataset</div>
-        <div class="stat-grid">
-            <div class="stat-card">
-                <div class="sc-icon sc-blue"><i class="bi bi-database-fill"></i></div>
-                <div class="sc-label">Total Data Berlabel</div>
-                <div class="sc-value" id="statTotal" style="color:#3B5BDB">-</div>
-                <div class="sc-sub">ulasan diproses</div>
-            </div>
-            <div class="stat-card">
-                <div class="sc-icon sc-green"><i class="bi bi-hand-thumbs-up-fill"></i></div>
-                <div class="sc-label">Sentimen Positif</div>
-                <div class="sc-value" id="statPos" style="color:var(--green)">-</div>
-                <div class="sc-sub" id="statPosPct">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="sc-icon sc-red"><i class="bi bi-hand-thumbs-down-fill"></i></div>
-                <div class="sc-label">Sentimen Negatif</div>
-                <div class="sc-value" id="statNeg" style="color:var(--red)">-</div>
-                <div class="sc-sub" id="statNegPct">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="sc-icon sc-amber"><i class="bi bi-star-fill"></i></div>
-                <div class="sc-label">Rata-rata Rating</div>
-                <div class="sc-value" id="statRating" style="color:#E65C00">-</div>
-                <div class="sc-sub">dari skala 5</div>
-            </div>
+    <!-- STAT CARDS -->
+    <div class="section-label">Ringkasan Dataset</div>
+    <div class="stat-grid">
+        <div class="stat-card">
+            <div class="sc-icon sc-blue"><i class="bi bi-database-fill"></i></div>
+            <div class="sc-label">Total Data Berlabel</div>
+            <div class="sc-value" id="statTotal" style="color:#3B5BDB">-</div>
+            <div class="sc-sub">ulasan diproses</div>
         </div>
+        <div class="stat-card">
+            <div class="sc-icon sc-green"><i class="bi bi-hand-thumbs-up-fill"></i></div>
+            <div class="sc-label">Sentimen Positif</div>
+            <div class="sc-value" id="statPos" style="color:var(--green)">-</div>
+            <div class="sc-sub" id="statPosPct">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="sc-icon sc-red"><i class="bi bi-hand-thumbs-down-fill"></i></div>
+            <div class="sc-label">Sentimen Negatif</div>
+            <div class="sc-value" id="statNeg" style="color:var(--red)">-</div>
+            <div class="sc-sub" id="statNegPct">-</div>
+        </div>
+        <div class="stat-card">
+            <div class="sc-icon sc-amber"><i class="bi bi-star-fill"></i></div>
+            <div class="sc-label">Rata-rata Rating</div>
+            <div class="sc-value" id="statRating" style="color:#E65C00">-</div>
+            <div class="sc-sub">dari skala 5</div>
+        </div>
+    </div>
 
-        <!-- EVALUASI + CONFUSION MATRIX -->
-        <div class="section-label">Performa Model</div>
-        <div class="row-2">
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-speedometer2"></i> Metrik Evaluasi</div>
-                    <span style="font-size:11px;color:var(--ink-60)">Test set 20%</span>
-                </div>
-                <div class="card-body">
-                    <div class="metric-row">
-                        <div class="metric-chip">
-                            <div class="mc-label">Akurasi</div>
-                            <div class="mc-value" id="evalAcc" style="color:#3B5BDB">-</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="mc-label">Presisi</div>
-                            <div class="mc-value" id="evalPrec" style="color:var(--green)">-</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="mc-label">Recall</div>
-                            <div class="mc-value" id="evalRec" style="color:#7950F2">-</div>
-                        </div>
-                        <div class="metric-chip">
-                            <div class="mc-label">F1-Score</div>
-                            <div class="mc-value" id="evalF1" style="color:#E65C00">-</div>
-                        </div>
+    <!-- EVALUASI + CONFUSION MATRIX -->
+    <div class="section-label">Performa Model</div>
+    <div class="row-2">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-speedometer2"></i> Metrik Evaluasi</div>
+                <span style="font-size:11px;color:var(--ink-60)">Test set 20%</span>
+            </div>
+            <div class="card-body">
+                <div class="metric-row">
+                    <div class="metric-chip">
+                        <div class="mc-label">Akurasi</div>
+                        <div class="mc-value" id="evalAcc" style="color:#3B5BDB">-</div>
                     </div>
-                    <div style="margin-top:16px;">
-                        <div style="font-size:11px;color:var(--ink-60);margin-bottom:6px;">Split Data Training / Testing
-                        </div>
-                        <div style="display:flex;gap:12px;">
-                            <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
-                                <div style="font-size:11px;color:var(--ink-60)">Training</div>
-                                <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;"
-                                    id="trainSize">-</div>
-                            </div>
-                            <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
-                                <div style="font-size:11px;color:var(--ink-60)">Testing</div>
-                                <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;"
-                                    id="testSize">-</div>
-                            </div>
-                            <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
-                                <div style="font-size:11px;color:var(--ink-60)">Vocab TF-IDF</div>
-                                <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;"
-                                    id="vocabSize">-</div>
-                            </div>
-                        </div>
+                    <div class="metric-chip">
+                        <div class="mc-label">Presisi</div>
+                        <div class="mc-value" id="evalPrec" style="color:var(--green)">-</div>
+                    </div>
+                    <div class="metric-chip">
+                        <div class="mc-label">Recall</div>
+                        <div class="mc-value" id="evalRec" style="color:#7950F2">-</div>
+                    </div>
+                    <div class="metric-chip">
+                        <div class="mc-label">F1-Score</div>
+                        <div class="mc-value" id="evalF1" style="color:#E65C00">-</div>
                     </div>
                 </div>
-            </div>
-
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-grid-3x3"></i> Confusion Matrix</div>
-                    <span style="font-size:11px;color:var(--ink-60)">N = <span id="cmTotal">-</span></span>
-                </div>
-                <div class="card-body">
-                    <div style="margin-bottom:6px;" class="cm-axis-label">â† Prediksi Model â†’</div>
-                    <div class="cm-grid">
-                        <div></div>
-                        <div class="cm-header">Pred. Positif</div>
-                        <div class="cm-header">Pred. Negatif</div>
-
-                        <div class="cm-row-label">Aktual</div>
-                        <div class="cm-cell cm-tp" id="cmTP">-<small>True Positive</small></div>
-                        <div class="cm-cell cm-fn" id="cmFN">-<small>False Negative</small></div>
-
-                        <div></div>
-                        <div class="cm-cell cm-fp" id="cmFP">-<small>False Positive</small></div>
-                        <div class="cm-cell cm-tn" id="cmTN">-<small>True Negative</small></div>
+                <div style="margin-top:16px;">
+                    <div style="font-size:11px;color:var(--ink-60);margin-bottom:6px;">Split Data Training / Testing</div>
+                    <div style="display:flex;gap:12px;">
+                        <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
+                            <div style="font-size:11px;color:var(--ink-60)">Training</div>
+                            <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;" id="trainSize">-</div>
+                        </div>
+                        <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
+                            <div style="font-size:11px;color:var(--ink-60)">Testing</div>
+                            <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;" id="testSize">-</div>
+                        </div>
+                        <div style="flex:1;background:var(--bg);border-radius:8px;padding:10px 12px;">
+                            <div style="font-size:11px;color:var(--ink-60)">Vocab TF-IDF</div>
+                            <div style="font-size:18px;font-weight:800;font-family:'JetBrains Mono',monospace;" id="vocabSize">-</div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- DISTRIBUSI SENTIMEN + RATING -->
-        <div class="section-label">Distribusi Data</div>
-        <div class="row-4-8">
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-pie-chart-fill"></i> Distribusi Sentimen</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-wrap h280">
-                        <canvas id="sentimentChart"></canvas>
-                    </div>
-                </div>
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-grid-3x3"></i> Confusion Matrix</div>
+                <span style="font-size:11px;color:var(--ink-60)">N = <span id="cmTotal">-</span></span>
             </div>
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-bar-chart-fill"></i> Distribusi Rating</div>
-                </div>
-                <div class="card-body">
-                    <div class="chart-wrap h280">
-                        <canvas id="ratingChart"></canvas>
-                    </div>
+            <div class="card-body">
+                <div style="margin-bottom:6px;" class="cm-axis-label">â† Prediksi Model â†’</div>
+                <div class="cm-grid">
+                    <div></div>
+                    <div class="cm-header">Pred. Positif</div>
+                    <div class="cm-header">Pred. Negatif</div>
+
+                    <div class="cm-row-label">Aktual</div>
+                    <div class="cm-cell cm-tp" id="cmTP">-<small>True Positive</small></div>
+                    <div class="cm-cell cm-fn" id="cmFN">-<small>False Negative</small></div>
+
+                    <div></div>
+                    <div class="cm-cell cm-fp" id="cmFP">-<small>False Positive</small></div>
+                    <div class="cm-cell cm-tn" id="cmTN">-<small>True Negative</small></div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <!-- TREN TAHUNAN -->
-        <div class="section-label">Tren Sentimen per Tahun</div>
-        <div class="row-1">
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-calendar3"></i> Tren Tahunan â€” Positif vs Negatif</div>
-                    <div class="year-pills" id="yearPills"></div>
-                </div>
-                <div class="card-body">
-                    <!-- Summary cards per tahun yang dipilih -->
-                    <div class="yearly-summary" id="yearlySummary"></div>
-                    <!-- Grafik: overview semua tahun (grouped bar) -->
-                    <div id="yearlyOverviewWrap" class="chart-wrap h260">
-                        <canvas id="yearlyOverviewChart"></canvas>
-                    </div>
-                    <!-- Grafik: drill-down per bulan saat klik tahun -->
-                    <div id="yearlyDetailWrap" style="display:none;" class="chart-wrap h260">
-                        <canvas id="yearlyDetailChart"></canvas>
-                    </div>
+    <!-- DISTRIBUSI SENTIMEN + RATING -->
+    <div class="section-label">Distribusi Data</div>
+    <div class="row-4-8">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-pie-chart-fill"></i> Distribusi Sentimen</div>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap h280">
+                    <canvas id="sentimentChart"></canvas>
                 </div>
             </div>
         </div>
-
-        <!-- TREN BULANAN -->
-        <div class="section-label">Tren Bulanan</div>
-        <div class="row-1">
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-graph-up-arrow"></i> Tren Bulanan Sentimen</div>
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-bar-chart-fill"></i> Distribusi Rating</div>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap h280">
+                    <canvas id="ratingChart"></canvas>
                 </div>
-                <div class="card-body">
-                    <div class="chart-wrap h320">
-                        <canvas id="monthlyChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- TREN TAHUNAN -->
+    <div class="section-label">Tren Sentimen per Tahun</div>
+    <div class="row-1">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-calendar3"></i> Tren Tahunan â€” Positif vs Negatif</div>
+                <div class="year-pills" id="yearPills"></div>
+            </div>
+            <div class="card-body">
+                <!-- Summary cards per tahun yang dipilih -->
+                <div class="yearly-summary" id="yearlySummary"></div>
+                <!-- Grafik: overview semua tahun (grouped bar) -->
+                <div id="yearlyOverviewWrap" class="chart-wrap h260">
+                    <canvas id="yearlyOverviewChart"></canvas>
+                </div>
+                <!-- Grafik: drill-down per bulan saat klik tahun -->
+                <div id="yearlyDetailWrap" style="display:none;" class="chart-wrap h260">
+                    <canvas id="yearlyDetailChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TREN BULANAN -->
+    <div class="section-label">Tren Bulanan</div>
+    <div class="row-1">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-graph-up-arrow"></i> Tren Bulanan Sentimen</div>
+            </div>
+            <div class="card-body">
+                <div class="chart-wrap h320">
+                    <canvas id="monthlyChart"></canvas>
+                </div>
+
+                <!-- TRENDING REVIEWS PANEL -->
+                <div class="trending-panel" id="trendingPanel">
+                    <!-- Default state -->
+                    <div class="trending-hint" id="trendingHint">
+                        <i class="bi bi-cursor-fill"></i>
+                        <span>Arahkan kursor ke grafik untuk melihat ulasan yang sedang tren bulan tersebut</span>
                     </div>
 
-                    <!-- TRENDING REVIEWS PANEL -->
-                    <div class="trending-panel" id="trendingPanel">
-                        <!-- Default state -->
-                        <div class="trending-hint" id="trendingHint">
-                            <i class="bi bi-cursor-fill"></i>
-                            <span>Arahkan kursor ke grafik untuk melihat ulasan yang sedang tren bulan tersebut</span>
-                        </div>
-
-                        <!-- Loaded state -->
-                        <div id="trendingContent" style="display:none;">
-                            <div class="trending-month-label" id="trendingMonthLabel"></div>
-                            <div class="trending-quotes-grid">
-                                <div class="tq-box" id="tqBoxSingle">
-                                    <div class="tq-box-header">
-                                        <i class="bi" id="tqIconSingle"></i>
-                                        <span id="tqHeaderTitle">Ulasan Terpopuler</span>
-                                    </div>
-                                    <div class="tq-box-body">
-                                        <span class="tq-qmark">"</span>
-                                        <p class="tq-sentence" id="tqSentenceSingle">—</p>
-                                    </div>
-                                    <div class="tq-box-footer" id="tqFooterSingle"></div>
+                    <!-- Loaded state -->
+                    <div id="trendingContent" style="display:none;">
+                        <div class="trending-month-label" id="trendingMonthLabel"></div>
+                        <div class="trending-quotes-grid">
+                            <div class="tq-box" id="tqBoxSingle">
+                                <div class="tq-box-header">
+                                    <i class="bi" id="tqIconSingle"></i>
+                                    <span id="tqHeaderTitle">Ulasan Terpopuler</span>
                                 </div>
+                                <div class="tq-box-body">
+                                    <span class="tq-qmark">"</span>
+                                    <p class="tq-sentence" id="tqSentenceSingle">—</p>
+                                </div>
+                                <div class="tq-box-footer" id="tqFooterSingle"></div>
                             </div>
                         </div>
-
-                        <!-- Loading state -->
-                        <div class="trending-loading" id="trendingLoading" style="display:none;">
-                            <div class="t-skel"></div>
-                        </div>
                     </div>
 
+                    <!-- Loading state -->
+                    <div class="trending-loading" id="trendingLoading" style="display:none;">
+                        <div class="t-skel"></div>
+                    </div>
                 </div>
+
             </div>
         </div>
+    </div>
 
 
-        <!-- WORD CLOUD -->
-        <div class="section-label">Awan Kata</div>
-        <div class="row-1">
-            <div class="card">
-                <div class="card-head">
-                    <div class="card-title"><i class="bi bi-cloud-haze2-fill"></i> Kata Paling Sering Muncul</div>
-                    <div class="wc-tabs">
-                        <button class="wc-tab active-pos" id="wcTabPos"
-                            onclick="loadWordCloud('positif')">Positif</button>
-                        <button class="wc-tab" id="wcTabNeg" onclick="loadWordCloud('negatif')">Negatif</button>
-                    </div>
+    <!-- WORD CLOUD -->
+    <div class="section-label">Awan Kata</div>
+    <div class="row-1">
+        <div class="card">
+            <div class="card-head">
+                <div class="card-title"><i class="bi bi-cloud-haze2-fill"></i> Kata Paling Sering Muncul</div>
+                <div class="wc-tabs">
+                    <button class="wc-tab active-pos" id="wcTabPos" onclick="loadWordCloud('positif')">Positif</button>
+                    <button class="wc-tab" id="wcTabNeg" onclick="loadWordCloud('negatif')">Negatif</button>
                 </div>
-                <div class="card-body">
-                    <canvas id="wordCloudCanvas" height="300"></canvas>
-                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="wordCloudCanvas" height="300"></canvas>
             </div>
         </div>
+    </div>
 
-        <!-- PREDICT -->
-        <div class="section-label">Uji Prediksi</div>
-        <div class="predict-panel">
-            <h3><i class="bi bi-robot"></i> Prediksi Sentimen Teks</h3>
-            <p style="font-size:13px;color:var(--ink-60);margin-top:4px;">Masukkan ulasan MyPertamina secara manual,
-                atau pilih template contoh di bawah ini.</p>
+    <!-- PREDICT -->
+    <div class="section-label">Uji Prediksi</div>
+    <div class="predict-panel">
+        <h3><i class="bi bi-robot"></i> Prediksi Sentimen Teks</h3>
+        <p style="font-size:13px;color:var(--ink-60);margin-top:4px;">Masukkan ulasan MyPertamina secara manual, atau pilih template contoh di bawah ini.</p>
 
-            <div class="template-bar">
-                <button class="tpl-btn tpl-pos" id="tpl0" onclick="setTpl(0)">Memuat...</button>
-                <button class="tpl-btn tpl-pos" id="tpl1" onclick="setTpl(1)">Memuat...</button>
-                <button class="tpl-btn tpl-neg" id="tpl2" onclick="setTpl(2)">Memuat...</button>
-                <button class="tpl-btn tpl-neg" id="tpl3" onclick="setTpl(3)">Memuat...</button>
-                <button class="tpl-btn tpl-action" onclick="refreshTpl()"><i class="bi bi-arrow-clockwise"></i>
-                    Acak</button>
-                <button class="tpl-btn tpl-action" onclick="setTemplate('')"><i class="bi bi-eraser"></i>
-                    Kosongkan</button>
-            </div>
+        <div class="template-bar">
+            <button class="tpl-btn tpl-pos" id="tpl0" onclick="setTpl(0)">Memuat...</button>
+            <button class="tpl-btn tpl-pos" id="tpl1" onclick="setTpl(1)">Memuat...</button>
+            <button class="tpl-btn tpl-neg" id="tpl2" onclick="setTpl(2)">Memuat...</button>
+            <button class="tpl-btn tpl-neg" id="tpl3" onclick="setTpl(3)">Memuat...</button>
+            <button class="tpl-btn tpl-action" onclick="refreshTpl()"><i class="bi bi-arrow-clockwise"></i> Acak</button>
+            <button class="tpl-btn tpl-action" onclick="setTemplate('')"><i class="bi bi-eraser"></i> Kosongkan</button>
+        </div>
 
-            <textarea class="predict-textarea" id="inputText" placeholder="Ketik atau tempel ulasan di siniâ€¦"
-                rows="3"></textarea>
-            <div>
-                <button class="predict-btn" id="btnPredict" onclick="predictSentiment()">
-                    <i class="bi bi-lightning-fill"></i> Prediksi Sekarang
-                </button>
-            </div>
+        <textarea class="predict-textarea" id="inputText" placeholder="Ketik atau tempel ulasan di siniâ€¦" rows="3"></textarea>
+        <div>
+            <button class="predict-btn" id="btnPredict" onclick="predictSentiment()">
+                <i class="bi bi-lightning-fill"></i> Prediksi Sekarang
+            </button>
+        </div>
 
-            <div class="result-box" id="predResult">
-                <div class="result-header" id="resultHeader">
-                    <div class="result-sentiment" id="resSentiment">-</div>
-                    <div>
-                        <div style="font-size:11px;color:var(--ink-60);text-align:right;margin-bottom:2px;">Confidence
-                        </div>
-                        <div class="result-conf" id="resConf">-</div>
-                    </div>
+        <div class="result-box" id="predResult">
+            <div class="result-header" id="resultHeader">
+                <div class="result-sentiment" id="resSentiment">-</div>
+                <div>
+                    <div style="font-size:11px;color:var(--ink-60);text-align:right;margin-bottom:2px;">Confidence</div>
+                    <div class="result-conf" id="resConf">-</div>
                 </div>
-                <div class="result-body">
-                    <div class="result-detail-grid">
-                        <div class="rd-item">
-                            <div class="rd-label">Model</div>
-                            <div class="rd-value" id="resModel">-</div>
-                        </div>
-                        <div class="rd-item">
-                            <div class="rd-label">Jumlah Kata</div>
-                            <div class="rd-value"><span id="resWcOrig">-</span> kata â†’ <span id="resWcClean">-</span>
-                                kata bersih</div>
-                        </div>
-                        <div class="rd-item" style="grid-column:1/-1;">
-                            <div class="rd-label">Hasil Preprocessing</div>
-                            <div class="rd-clean" id="resClean">-</div>
-                        </div>
+            </div>
+            <div class="result-body">
+                <div class="result-detail-grid">
+                    <div class="rd-item">
+                        <div class="rd-label">Model</div>
+                        <div class="rd-value" id="resModel">-</div>
+                    </div>
+                    <div class="rd-item">
+                        <div class="rd-label">Jumlah Kata</div>
+                        <div class="rd-value"><span id="resWcOrig">-</span> kata â†’ <span id="resWcClean">-</span> kata bersih</div>
+                    </div>
+                    <div class="rd-item" style="grid-column:1/-1;">
+                        <div class="rd-label">Hasil Preprocessing</div>
+                        <div class="rd-clean" id="resClean">-</div>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-    </div><!-- /main -->
+</div><!-- /main -->
 
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
-
 </html>
