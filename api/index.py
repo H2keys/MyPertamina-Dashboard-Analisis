@@ -510,6 +510,118 @@ def api_predict():
 
 
 # ================================================================
+# ANALYZE URL — Google Play Store scraping + batch prediction
+# ================================================================
+
+@app.route('/api/analyze_url', methods=['POST'])
+def api_analyze_url():
+    """
+    Menerima URL Google Play Store, scrape review, dan analisis sentimen batch.
+    Body JSON: { "url": "https://play.google.com/store/apps/details?id=com.xxx" }
+    """
+    try:
+        from google_play_scraper import app as gp_app, reviews, Sort
+    except ImportError:
+        return jsonify({'error': 'Library google-play-scraper tidak tersedia. Jalankan: pip install google-play-scraper'}), 500
+
+    body = request.get_json(silent=True)
+    if not body:
+        return jsonify({'error': 'Tidak ada data yang diterima'}), 400
+
+    url = body.get('url', '').strip()
+    if not url:
+        return jsonify({'error': 'URL tidak boleh kosong'}), 400
+
+    # ── Ekstrak app_id dari URL ──────────────────────────────────
+    import urllib.parse as _up
+    try:
+        parsed   = _up.urlparse(url)
+        app_id   = _up.parse_qs(parsed.query).get('id', [None])[0]
+        if not app_id:
+            # Coba ekstrak dari path seperti /store/apps/details/id/com.xxx
+            parts = [p for p in parsed.path.split('/') if p]
+            if 'id' in parts:
+                app_id = parts[parts.index('id') + 1]
+        if not app_id:
+            return jsonify({'error': 'Tidak dapat menemukan app ID dari URL. Pastikan URL mengandung ?id=com.xxx'}), 400
+    except Exception as e:
+        return jsonify({'error': f'URL tidak valid: {str(e)}'}), 400
+
+    # ── Ambil info aplikasi ──────────────────────────────────────
+    try:
+        app_info = gp_app(app_id, lang='id', country='id')
+    except Exception:
+        try:
+            app_info = gp_app(app_id, lang='en', country='us')
+        except Exception as e:
+            return jsonify({'error': f'App tidak ditemukan: {str(e)[:120]}'}), 404
+
+    # ── Scrape reviews (max 200, terbaru) ────────────────────────
+    try:
+        result_reviews, _ = reviews(
+            app_id,
+            lang='id', country='id',
+            sort=Sort.NEWEST,
+            count=200,
+        )
+    except Exception as e:
+        return jsonify({'error': f'Gagal scrape review: {str(e)[:120]}'}), 502
+
+    if not result_reviews:
+        return jsonify({'error': 'Tidak ada review yang berhasil diambil dari Play Store.'}), 404
+
+    # ── Analisis sentimen batch ──────────────────────────────────
+    analyzed   = []
+    pos_count  = 0
+    neg_count  = 0
+    conf_total = 0.0
+
+    for rev in result_reviews:
+        raw_text = (rev.get('content') or '').strip()
+        if not raw_text:
+            continue
+
+        res       = predict_sentiment(raw_text)
+        sentiment = res.get('sentiment', '-')
+        conf      = res.get('confidence', 0.0)
+
+        if sentiment == 'Positif':
+            pos_count += 1
+        elif sentiment == 'Negatif':
+            neg_count += 1
+
+        conf_total += conf
+        analyzed.append({
+            'text'      : raw_text[:300],   # potong agar JSON tidak terlalu besar
+            'sentiment' : sentiment,
+            'confidence': conf,
+            'rating'    : rev.get('score', None),
+            'at'        : rev.get('at', None) and str(rev['at'])[:10],
+            'userName'  : rev.get('userName', 'Anonim'),
+        })
+
+    total     = len(analyzed)
+    avg_conf  = round(conf_total / total, 1) if total else 0.0
+    pct_pos   = round(pos_count / total * 100, 1) if total else 0.0
+    pct_neg   = round(neg_count / total * 100, 1) if total else 0.0
+
+    return jsonify({
+        'app_id'        : app_id,
+        'app_name'      : app_info.get('title', app_id),
+        'app_icon'      : app_info.get('icon', ''),
+        'app_developer' : app_info.get('developer', '-'),
+        'app_rating'    : app_info.get('score', None),
+        'total_scraped' : total,
+        'positif'       : pos_count,
+        'negatif'       : neg_count,
+        'pct_positif'   : pct_pos,
+        'pct_negatif'   : pct_neg,
+        'avg_confidence': avg_conf,
+        'reviews'       : analyzed,
+    })
+
+
+# ================================================================
 # ROUTE TAMBAHAN — debug / eksplorasi
 # ================================================================
 
@@ -538,4 +650,4 @@ def api_dataset_stats():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=5000, use_reloader=False)

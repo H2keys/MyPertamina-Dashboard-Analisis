@@ -21,6 +21,9 @@
     <div style="display:flex; align-items:center; gap:16px;">
         <span class="badge-live">SVM + TF-IDF</span>
         <span class="topnav-meta" id="navDate"></span>
+        <button class="url-nav-btn" id="btnOpenUrlDrawer" onclick="openUrlDrawer()">
+            <i class="bi bi-link-45deg"></i> Analisis URL
+        </button>
     </div>
 </nav>
 
@@ -290,6 +293,125 @@
     </div>
 
 </div><!-- /main -->
+
+<!-- ================================================================
+     URL ANALYZER DRAWER
+================================================================ -->
+<div class="url-overlay" id="urlOverlay" onclick="closeUrlDrawer()"></div>
+
+<div class="url-drawer" id="urlDrawer">
+    <!-- Header -->
+    <div class="url-drawer-header">
+        <div class="url-drawer-title">
+            <i class="bi bi-play-circle-fill" style="color:#00875F"></i>
+            Analisis Sentimen dari Play Store
+        </div>
+        <button class="url-close-btn" onclick="closeUrlDrawer()">
+            <i class="bi bi-x-lg"></i>
+        </button>
+    </div>
+
+    <!-- Input URL -->
+    <div class="url-input-section">
+        <label class="url-input-label" for="urlInput">
+            <i class="bi bi-link-45deg"></i> URL Google Play Store
+        </label>
+        <div class="url-input-wrap">
+            <input
+                type="url"
+                id="urlInput"
+                class="url-input"
+                placeholder="https://play.google.com/store/apps/details?id=com.pertamina.mypertamina"
+                onkeydown="if(event.key==='Enter') analyzeUrl()"
+            >
+            <button class="url-analyze-btn" id="btnAnalyzeUrl" onclick="analyzeUrl()">
+                <i class="bi bi-cpu-fill"></i> Analisis
+            </button>
+        </div>
+        <div class="url-hint">Tempel URL aplikasi dari Google Play Store, lalu klik Analisis. Maksimum 200 ulasan terbaru akan diproses.</div>
+    </div>
+
+    <!-- State: idle -->
+    <div class="url-state url-state-idle" id="urlStateIdle">
+        <i class="bi bi-play-btn" style="font-size:32px;opacity:.25"></i>
+        <p>Masukkan URL aplikasi Play Store untuk memulai analisis sentimen.</p>
+    </div>
+
+    <!-- State: loading -->
+    <div class="url-state url-state-loading" id="urlStateLoading" style="display:none">
+        <div class="url-spinner"></div>
+        <p id="urlLoadingText">Mengambil ulasan dari Play Store…</p>
+    </div>
+
+    <!-- State: error -->
+    <div class="url-state url-state-error" id="urlStateError" style="display:none">
+        <i class="bi bi-exclamation-triangle-fill" style="font-size:28px;color:var(--red);opacity:.7"></i>
+        <p id="urlErrorMsg">Terjadi kesalahan.</p>
+    </div>
+
+    <!-- State: results -->
+    <div id="urlResults" style="display:none">
+
+        <!-- App Info Card -->
+        <div class="url-app-card" id="urlAppCard">
+            <img class="url-app-icon" id="urlAppIcon" src="" alt="icon">
+            <div class="url-app-info">
+                <div class="url-app-name" id="urlAppName">-</div>
+                <div class="url-app-dev" id="urlAppDev">-</div>
+                <div class="url-app-gp-rating" id="urlAppGpRating">-</div>
+            </div>
+        </div>
+
+        <!-- Stat Summary -->
+        <div class="url-stats-row">
+            <div class="url-stat-card url-stat-total">
+                <div class="url-stat-val" id="urlStatTotal">-</div>
+                <div class="url-stat-label">Ulasan Dianalisis</div>
+            </div>
+            <div class="url-stat-card url-stat-pos">
+                <div class="url-stat-val" id="urlStatPos">-</div>
+                <div class="url-stat-label">Positif</div>
+                <div class="url-stat-pct" id="urlStatPosPct"></div>
+            </div>
+            <div class="url-stat-card url-stat-neg">
+                <div class="url-stat-val" id="urlStatNeg">-</div>
+                <div class="url-stat-label">Negatif</div>
+                <div class="url-stat-pct" id="urlStatNegPct"></div>
+            </div>
+            <div class="url-stat-card url-stat-conf">
+                <div class="url-stat-val" id="urlStatConf">-</div>
+                <div class="url-stat-label">Avg. Confidence</div>
+            </div>
+        </div>
+
+        <!-- Sentiment Bar -->
+        <div class="url-sentiment-bar-wrap">
+            <div class="url-sentiment-bar">
+                <div class="url-bar-pos" id="urlBarPos" style="width:0%"></div>
+                <div class="url-bar-neg" id="urlBarNeg" style="width:0%"></div>
+            </div>
+            <div class="url-bar-labels">
+                <span style="color:var(--green)"><i class="bi bi-circle-fill" style="font-size:8px"></i> Positif</span>
+                <span style="color:var(--red)"><i class="bi bi-circle-fill" style="font-size:8px"></i> Negatif</span>
+            </div>
+        </div>
+
+        <!-- Filter + Review List -->
+        <div class="url-review-header">
+            <div class="url-review-title"><i class="bi bi-chat-left-text"></i> Daftar Ulasan</div>
+            <div class="url-filter-tabs">
+                <button class="url-ftab active" id="urlFtabAll"   onclick="urlFilter('all')">Semua</button>
+                <button class="url-ftab"        id="urlFtabPos"   onclick="urlFilter('Positif')">Positif</button>
+                <button class="url-ftab"        id="urlFtabNeg"   onclick="urlFilter('Negatif')">Negatif</button>
+            </div>
+        </div>
+
+        <div class="url-review-list" id="urlReviewList"></div>
+
+        <!-- Pagination -->
+        <div class="url-pagination" id="urlPagination"></div>
+    </div>
+</div>
 
 <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
